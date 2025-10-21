@@ -1,19 +1,16 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
 
-const NSFW_KEYWORDS = [
-  "porn", "nsfw", "nude", "nudity", "explicit", "sex", "sexual", "fetish",
-  "erotic", "adult", "xxx", "underage", "incest", "rape", "loli", "shota",
-  "revenge porn", "deepfake", "strip", "boobs", "genitals", "penis", "vagina"
+const BLOCK = [
+  "porn","nsfw","nude","nudity","explicit","sex","sexual","fetish","erotic","adult",
+  "xxx","underage","incest","rape","loli","shota","revenge porn","deepfake",
+  "strip","boobs","genitals","penis","vagina"
 ];
 
-function looksUnsafe(prompt: string): string | null {
-  const p = prompt.toLowerCase();
-  if (!p.trim()) return "Please enter a prompt.";
-  if (p.length > 300) return "Prompt too long.";
-  if (NSFW_KEYWORDS.some(k => p.includes(k))) {
-    return "Explicit or harmful content is blocked.";
-  }
+function checkPrompt(p: string): string | null {
+  const t = p.toLowerCase().trim();
+  if (!t) return "Please enter a prompt.";
+  if (t.length > 300) return "Prompt too long (max 300 chars).";
+  if (BLOCK.some(k => t.includes(k))) return "Blocked by safety policy. Use non-explicit ideas.";
   return null;
 }
 
@@ -23,88 +20,98 @@ export default function SafeAIImageSite() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function generateImage() {
+  async function generate() {
     setError(null);
     setImageUrl(null);
-    const unsafe = looksUnsafe(prompt);
-    if (unsafe) { setError(unsafe); return; }
+    const bad = checkPrompt(prompt);
+    if (bad) { setError(bad); return; }
 
     setLoading(true);
     try {
-      // Demo image instead of API call:
+      // Demo image (no external APIs). Always enforce server-side moderation if you add one later.
       const svg = encodeURIComponent(`
-        <svg xmlns='http://www.w3.org/2000/svg' width='1024' height='768'>
-          <rect width='100%' height='100%' fill='#e5e7eb'/>
-          <text x='50%' y='50%' text-anchor='middle' font-family='sans-serif'
-                font-size='28' fill='#111827'>
+        <svg xmlns='http://www.w3.org/2000/svg' width='1024' height='640'>
+          <defs>
+            <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+              <stop offset='0%' stop-color='#eaeef6'/>
+              <stop offset='100%' stop-color='#cfd8ea'/>
+            </linearGradient>
+          </defs>
+          <rect width='100%' height='100%' fill='url(#g)'/>
+          <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle'
+                font-family='Segoe UI, system-ui, sans-serif' font-size='28' fill='#111'>
             ${prompt.replace(/</g, "&lt;").slice(0, 60)}
           </text>
         </svg>
       `);
       setImageUrl(`data:image/svg+xml;charset=utf-8,${svg}`);
     } catch (e: any) {
-      setError(e?.message || "Failed to generate image.");
+      setError(e?.message || "Generation failed.");
     } finally {
       setLoading(false);
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-800 p-8">
-      <header className="max-w-4xl mx-auto text-center mb-8">
-        <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="text-3xl font-semibold"
-        >
-          Safe AI Image Playground
-        </motion.h1>
-        <p className="text-slate-600 mt-2">
-          Generate creative, non-explicit images safely.
-        </p>
-      </header>
+  const box: React.CSSProperties = {
+    background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 16, boxShadow: "0 1px 4px rgba(0,0,0,.06)"
+  };
 
-      <main className="max-w-4xl mx-auto flex flex-col md:flex-row gap-8">
-        <div className="flex-1">
+  return (
+    <div>
+      <h1 style={{fontSize: 28, fontWeight: 600, margin: "0 0 8px"}}>Safe AI Image Playground</h1>
+      <p style={{margin: "0 0 20px", color: "#475569"}}>
+        Generate creative, non-explicit images. This demo uses a local SVG preview.
+      </p>
+
+      <div style={{display: "grid", gap: 16, gridTemplateColumns: "1fr 1fr"}}>
+        <div style={box}>
+          <label htmlFor="p" style={{display:"block", fontWeight:600, marginBottom:8}}>Prompt</label>
           <textarea
+            id="p"
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            placeholder="e.g., a futuristic city made of glass"
-            className="w-full h-40 p-4 border border-slate-300 rounded-2xl shadow-sm focus:ring-2 focus:ring-slate-400"
+            placeholder="e.g., a futuristic glass city at sunset"
+            style={{width:"100%", height:140, border:"1px solid #cbd5e1", borderRadius:12, padding:12, resize:"vertical"}}
           />
-          <div className="mt-4 flex gap-3">
+          <div style={{display:"flex", gap:8, marginTop:12}}>
             <button
-              onClick={generateImage}
+              onClick={generate}
               disabled={loading}
-              className="px-5 py-2 bg-slate-900 text-white rounded-2xl shadow hover:shadow-md disabled:opacity-60"
+              style={{padding:"10px 16px", borderRadius:12, border:"none", background:"#111827", color:"#fff", cursor:"pointer", opacity: loading ? .7 : 1}}
             >
-              {loading ? "Generating..." : "Generate"}
+              {loading ? "Generating…" : "Generate"}
             </button>
             <button
               onClick={() => { setPrompt(""); setImageUrl(null); setError(null); }}
-              className="px-4 py-2 border border-slate-300 rounded-2xl bg-white hover:bg-slate-50"
+              style={{padding:"10px 14px", borderRadius:12, border:"1px solid #cbd5e1", background:"#fff", cursor:"pointer"}}
             >
               Reset
             </button>
           </div>
           {error && (
-            <p className="mt-4 text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-3 text-sm">
+            <div role="alert" style={{marginTop:12, color:"#7f1d1d", background:"#fee2e2", border:"1px solid #fecaca", borderRadius:12, padding:10}}>
               {error}
-            </p>
+            </div>
           )}
+          <ul style={{marginTop:12, color:"#475569", fontSize:14, lineHeight:1.5}}>
+            <li>Client filter is a UX guardrail. Add server-side moderation if you integrate a real API.</li>
+            <li>Keep content non-explicit and lawful.</li>
+          </ul>
         </div>
 
-        <div className="flex-1">
-          <div className="aspect-video w-full rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+        <div style={box}>
+          <div style={{aspectRatio: "16 / 10", width: "100%", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", borderRadius:12, background:"#f8fafc", border:"1px solid #e2e8f0"}}>
             {imageUrl ? (
-              <img src={imageUrl} alt="Generated" className="w-full h-full object-cover" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={imageUrl} alt="Generated" style={{width:"100%", height:"100%", objectFit:"cover"}} />
             ) : (
-              <p className="text-slate-500 text-sm">Generated image appears here</p>
+              <span style={{color:"#64748b"}}>Your generated image will appear here</span>
             )}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
+
+
