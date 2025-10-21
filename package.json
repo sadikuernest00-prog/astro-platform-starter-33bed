@@ -1,15 +1,15 @@
 {
   "name": "my-ai-image-app",
   "type": "module",
+  "engines": { "node": ">=18.17" },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/react": "^3.0.0",
-    "astro": "^4.0.0",
-    "framer-motion": "^10.0.0",
+    "@astrojs/react": "^3.5.0",
+    "astro": "^4.14.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
