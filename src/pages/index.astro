@@ -1,14 +1,23 @@
+
 ---
 import SafeAIImageSite from "../components/SafeAIImageSite.tsx";
 ---
 
+<!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Safe AI Image Playground</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#f6f7f9; color:#111; }
+      .wrap { max-width: 1000px; margin: 0 auto; padding: 24px; }
+    </style>
   </head>
   <body>
-    <SafeAIImageSite client:load />
+    <div class="wrap">
+      <SafeAIImageSite client:load />
+    </div>
   </body>
 </html>
